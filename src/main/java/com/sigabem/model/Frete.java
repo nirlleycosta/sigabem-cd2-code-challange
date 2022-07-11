@@ -1,12 +1,11 @@
 package com.sigabem.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 @Entity
 public class Frete {
@@ -20,96 +19,76 @@ public class Frete {
     private double peso;
 
     @Column(name = "cep_origem")
+    @JsonProperty("cepOrigem")
     private String cepOrigem;
 
     @Column(name = "cep_destino")
+    @JsonProperty("cepDestino")
     private String cepDestino;
 
     @Column(name = "nome_destinatario")
     private String nomeDestinatario;
 
     @Column(name = "valortotal")
+    @JsonProperty("vlTotalFrete")
     private double valorTotalFrete;
 
     @Column(name = "previsao_entrega")
-    private String dataPrevistaEntrega;
-    // Como agregarei os dias de acordo com o cep?
+    @JsonProperty("dataPrevistaEntrega")
+    private Calendar dataPrevistaEntrega;
 
     @Column(name = "data_consulta")
-    private String dataConsulta;
+    @CreationTimestamp
+    private Timestamp dataConsulta;
 
     @ManyToOne
-    private Endereco endereco;
+    private Endereco enderecoOrigem;
 
-    public Long getId() {
-        return id;
+    @ManyToOne
+    private Endereco enderecoDestino;
+
+    @Transient
+    private DescontoStrategy descontoStrategy = new DescontoPadraoStrategy();
+
+    private Frete() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Frete(double peso, String nomeDestinatario, Endereco enderecoOrigem, Endereco enderecoDestino) {
+        this.peso = peso;
+        this.nomeDestinatario = nomeDestinatario;
+        this.enderecoOrigem = enderecoOrigem;
+        this.enderecoDestino = enderecoDestino;
+
+        this.cepOrigem = enderecoOrigem.getCep();
+        this.cepDestino = enderecoDestino.getCep();
+
+        if (isMesmoDdd()) {
+            descontoStrategy = new DescontoMesmoDddStrategy();
+        } else if (isMesmoEstado()) {
+            descontoStrategy = new DescontoMesmoEstadoStrategy();
+        }
+
+        // TODO: melhorar e renomear
+        descontoStrategy.aplicarDesconto(this);
     }
 
     public double getPeso() {
         return peso;
     }
 
-    public void setPeso(double peso) {
-        this.peso = peso;
-    }
-
-    public String getCepOrigem() {
-        return cepOrigem;
-    }
-
-    public void setCepOrigem(String cepOrigem) {
-        this.cepOrigem = cepOrigem;
-    }
-
-    public String getCepDestino() {
-        return cepDestino;
-    }
-
-    public void setCepDestino(String cepDestino) {
-        this.cepDestino = cepDestino;
-    }
-
-    public String getNomeDestinatario() {
-        return nomeDestinatario;
-    }
-
-    public void setNomeDestinatario(String nomeDestinatario) {
-        this.nomeDestinatario = nomeDestinatario;
-    }
-
-    public double getValorTotalFrete() {
-        return valorTotalFrete;
-    }
-
-    public void setValorTotalFrete(double valorTotalFrete) {
+    void setValorTotalFrete(double valorTotalFrete) {
         this.valorTotalFrete = valorTotalFrete;
     }
 
-    public String getDataPrevistaEntrega() {
-        return dataPrevistaEntrega;
-    }
-
-    public void setDataPrevistaEntrega(String dataPrevistaEntrega) {
+    void setDataPrevistaEntrega(Calendar dataPrevistaEntrega) {
         this.dataPrevistaEntrega = dataPrevistaEntrega;
     }
 
-    public String getDataConsulta() {
-        return dataConsulta;
+    private boolean isMesmoDdd() {
+        return enderecoOrigem.getDdd().equals(enderecoDestino.getDdd());
     }
 
-    public void setDataConsulta(String dataConsulta) {
-        this.dataConsulta = dataConsulta;
-    }
-
-    public Endereco getEndereco() {
-        return endereco;
-    }
-
-    public void setEndereco(Endereco endereco) {
-        this.endereco = endereco;
+    private boolean isMesmoEstado() {
+        return enderecoOrigem.getUf().equals(enderecoDestino.getUf());
     }
 }

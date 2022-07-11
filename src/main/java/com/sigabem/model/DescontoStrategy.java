@@ -1,7 +1,6 @@
-package com.sigabem.service;
+package com.sigabem.model;
 
-import com.sigabem.model.Frete;
-import org.springframework.stereotype.Service;
+import java.util.Calendar;
 
 /**
  * Interface que define o padrão <b>Strategy</b> no domínio de frete. Com
@@ -10,9 +9,7 @@ import org.springframework.stereotype.Service;
  *
  * @author nirlleycosta
  */
-@Service
-public interface DescontoStrategy {
+abstract class DescontoStrategy {
 
-    void inserirDesconto(Frete frete);
-
+    abstract void aplicarDesconto(Frete frete);
 }

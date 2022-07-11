@@ -1,14 +1,12 @@
 package com.sigabem.controller;
 
-import com.sigabem.service.DescontoStrategy;
+import com.sigabem.model.Endereco;
 import com.sigabem.model.Frete;
-import com.sigabem.service.FreteService;
+import com.sigabem.repository.EnderecoRepository;
+import com.sigabem.repository.FreteRepository;
+import com.sigabem.service.ViaCepService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,33 +22,33 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("fretes")
 public class FreteRestController {
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
     @Autowired
-    @Qualifier(value = "descontoStrategyDDD")
-    private DescontoStrategy descontoStrategy;
+    private ViaCepService viaCepService;
 
     @Autowired
-    private FreteService freteService;
-
-    @GetMapping
-    public ResponseEntity<Iterable<Frete>> buscarTodos() {
-        return ResponseEntity.ok(freteService.buscarTodos());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Frete> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(freteService.buscarPorId(id));
-    }
+    private FreteRepository freteRepository;
 
     @PostMapping
-    public ResponseEntity<Frete> inserir(@RequestBody Frete frete) {
-        descontoStrategy.inserirDesconto(frete);
+    public ResponseEntity<Frete> inserir(@RequestBody FreteRequest freteRequest) {
+        Endereco enderecoOrigem = consultarCep(freteRequest.cepOrigem);
+        Endereco enderecoDestino = consultarCep(freteRequest.cepDestino);
+
+        Frete frete = new Frete(freteRequest.peso, freteRequest.nomeDestinatario, enderecoOrigem, enderecoDestino);
+        freteRepository.save(frete);
+
         return ResponseEntity.ok(frete);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        freteService.deletar(id);
-        return ResponseEntity.ok().build();
+    private Endereco consultarCep(String cep) {
+        Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
+            Endereco novoEndereco = viaCepService.consultarCep(cep);
+            enderecoRepository.save(novoEndereco);
+            return novoEndereco;
+        });
+
+        return endereco;
     }
 }
