@@ -5,6 +5,7 @@ import com.sigabem.model.Frete;
 import com.sigabem.repository.EnderecoRepository;
 import com.sigabem.repository.FreteRepository;
 import com.sigabem.service.ViaCepService;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,9 +31,17 @@ public class FreteRestController {
     private FreteRepository freteRepository;
 
     @PostMapping
-    public ResponseEntity<Frete> inserir(@RequestBody FreteRequest freteRequest) {
+    public ResponseEntity<?> inserir(@RequestBody FreteRequest freteRequest) {
         Endereco enderecoOrigem = consultarCep(freteRequest.cepOrigem);
         Endereco enderecoDestino = consultarCep(freteRequest.cepDestino);
+
+        if (enderecoOrigem == null) {
+            return ResponseEntity.badRequest().body("O CEP de origem não foi encontrado");
+        }
+
+        if (enderecoDestino == null) {
+            return ResponseEntity.badRequest().body("O CEP de destino não foi encontrado");
+        }
 
         Frete frete = new Frete(freteRequest.peso, freteRequest.nomeDestinatario, enderecoOrigem, enderecoDestino);
         freteRepository.save(frete);
@@ -40,11 +49,16 @@ public class FreteRestController {
         return ResponseEntity.ok(frete);
     }
 
+    // Não foi implementado a validação do retorno da viaCep para casos de CEP inválido ou inexistente
     private Endereco consultarCep(String cep) {
         Endereco endereco = enderecoRepository.findById(cep).orElseGet(() -> {
-            Endereco novoEndereco = viaCepService.consultarCep(cep);
-            enderecoRepository.save(novoEndereco);
-            return novoEndereco;
+           try {
+               Endereco novoEndereco = viaCepService.consultarCep(cep);
+               enderecoRepository.save(novoEndereco);
+               return novoEndereco;
+           } catch (FeignException e) {
+               return null;
+           }
         });
 
         return endereco;

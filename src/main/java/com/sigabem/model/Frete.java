@@ -52,9 +52,19 @@ public class Frete {
     @Transient
     private FreteStrategy freteStrategy = new FretePadraoStrategy();
 
+    // Usar sempre o construtor parametrizado.
     private Frete() {
     }
 
+    /**
+     * Esse construtor deve ser sempre usado pois inicializa Frete com todos os atributos e com o valor e previsão
+     * de entregas calculados.
+     *
+     * @param peso
+     * @param nomeDestinatario
+     * @param enderecoOrigem
+     * @param enderecoDestino
+     */
     public Frete(double peso, String nomeDestinatario, Endereco enderecoOrigem, Endereco enderecoDestino) {
         this.peso = peso;
         this.nomeDestinatario = nomeDestinatario;
@@ -64,6 +74,10 @@ public class Frete {
         this.cepOrigem = enderecoOrigem.getCep();
         this.cepDestino = enderecoDestino.getCep();
 
+        /**
+         * Define qual estratégia usar. Caso nenhuma seja aplicável, usa a estratégia padrão
+         * {@link FretePadraoStrategy}.
+         */
         if (isMesmoDdd()) {
             freteStrategy = new FreteMesmoDddStrategy();
         } else if (isMesmoEstado()) {
