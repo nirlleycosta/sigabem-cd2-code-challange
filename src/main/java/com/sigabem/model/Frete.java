@@ -1,5 +1,6 @@
 package com.sigabem.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -35,6 +36,7 @@ public class Frete {
 
     @Column(name = "previsao_entrega")
     @JsonProperty("dataPrevistaEntrega")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Calendar dataPrevistaEntrega;
 
     @Column(name = "data_consulta")
@@ -48,7 +50,7 @@ public class Frete {
     private Endereco enderecoDestino;
 
     @Transient
-    private DescontoStrategy descontoStrategy = new DescontoPadraoStrategy();
+    private FreteStrategy freteStrategy = new FretePadraoStrategy();
 
     private Frete() {
     }
@@ -63,13 +65,13 @@ public class Frete {
         this.cepDestino = enderecoDestino.getCep();
 
         if (isMesmoDdd()) {
-            descontoStrategy = new DescontoMesmoDddStrategy();
+            freteStrategy = new FreteMesmoDddStrategy();
         } else if (isMesmoEstado()) {
-            descontoStrategy = new DescontoMesmoEstadoStrategy();
+            freteStrategy = new FreteMesmoEstadoStrategy();
         }
 
-        // TODO: melhorar e renomear
-        descontoStrategy.aplicarDesconto(this);
+        freteStrategy.calcularValorTotal(this);
+        freteStrategy.definirDataDeEntrega(this);
     }
 
     public double getPeso() {
