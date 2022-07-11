@@ -35,6 +35,10 @@ public class FreteRestController {
         Endereco enderecoOrigem = consultarCep(freteRequest.cepOrigem);
         Endereco enderecoDestino = consultarCep(freteRequest.cepDestino);
 
+        if (freteRequest.peso <= 0) {
+            return ResponseEntity.badRequest().body("O peso não foi informado");
+        }
+
         if (enderecoOrigem == null) {
             return ResponseEntity.badRequest().body("O CEP de origem não foi encontrado");
         }
