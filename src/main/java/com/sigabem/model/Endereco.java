@@ -11,8 +11,6 @@ import javax.persistence.OneToMany;
  * 
  * @see <a href="https://www.jsonschema2pojo.org">jsonschema2pojo.org</a>
  * @see <a href="https://viacep.com.br">ViaCEP</a>
- * 
- * @author nirlleycosta
  */
 @Entity
 public class Endereco {
