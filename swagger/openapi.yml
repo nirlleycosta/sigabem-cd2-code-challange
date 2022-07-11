@@ -1,0 +1,57 @@
+# Para visualizar, cole o conteúdo desse arquivo em: https://editor.swagger.io/
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+paths:
+  /fretes:
+    post:
+      tags:
+        - frete-rest-controller
+      operationId: inserir
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreteRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Frete'
+components:
+  schemas:
+    FreteRequest:
+      type: object
+      properties:
+        peso:
+          type: number
+          format: double
+        cepOrigem:
+          type: string
+        cepDestino:
+          type: string
+        nomeDestinatario:
+          type: string
+    Frete:
+      type: object
+      properties:
+        peso:
+          type: number
+          format: double
+        cepOrigem:
+          type: string
+        cepDestino:
+          type: string
+        vlTotalFrete:
+          type: number
+          format: double
+        dataPrevistaEntrega:
+          type: string
+          format: date-time
